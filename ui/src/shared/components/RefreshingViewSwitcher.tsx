@@ -1,5 +1,6 @@
 // Libraries
 import React, {FunctionComponent} from 'react'
+import {Plot} from '@influxdata/vis'
 
 // Components
 import GaugeChart from 'src/shared/components/GaugeChart'
@@ -9,6 +10,7 @@ import TableGraphs from 'src/shared/components/tables/TableGraphs'
 import DygraphContainer from 'src/shared/components/DygraphContainer'
 import Histogram from 'src/shared/components/Histogram'
 import VisTableTransform from 'src/shared/components/VisTableTransform'
+import XYTransform from 'src/shared/components/XYTransform'
 
 // Types
 import {
@@ -23,6 +25,7 @@ import {FluxTable, RemoteDataState, TimeRange} from 'src/types'
 interface Props {
   viewID: string
   tables: FluxTable[]
+  files: string[]
   loading: RemoteDataState
   properties: QueryViewProperties
   timeRange?: TimeRange
@@ -49,16 +52,17 @@ const RefreshingViewSwitcher: FunctionComponent<Props> = ({
     case ViewType.Gauge:
       return <GaugeChart tables={tables} properties={properties} />
     case ViewType.XY:
-      return (
-        <DygraphContainer
-          tables={tables}
-          viewID={viewID}
-          onZoom={onZoom}
-          loading={loading}
-          timeRange={timeRange}
-          properties={properties}
-        />
-      )
+      return <XYTransform>{config => <Plot config={config} />}</XYTransform>
+    // return (
+    //   <DygraphContainer
+    //     tables={tables}
+    //     viewID={viewID}
+    //     onZoom={onZoom}
+    //     loading={loading}
+    //     timeRange={timeRange}
+    //     properties={properties}
+    //   />
+    // )
     case ViewType.LinePlusSingleStat:
       const xyProperties = {
         ...properties,
