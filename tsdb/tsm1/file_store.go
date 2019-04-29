@@ -328,7 +328,11 @@ func (t *fileTracker) SetBytes(bytes map[int]uint64) {
 	total := uint64(0)
 	labels := t.Labels()
 	for k, v := range bytes {
-		labels["level"] = fmt.Sprintf("%d", k)
+		level := uint64(k)
+		if level > 5 {
+			level = 5
+		}
+		labels["level"] = fmt.Sprintf("%d", level)
 		t.metrics.DiskSize.With(labels).Set(float64(v))
 	}
 	atomic.StoreUint64(&t.diskBytes, total)
@@ -339,6 +343,9 @@ func (t *fileTracker) AddBytes(bytes uint64, level int) {
 	atomic.AddUint64(&t.diskBytes, bytes)
 
 	labels := t.Labels()
+	if level > 5 {
+		level = 5
+	}
 	labels["level"] = fmt.Sprintf("%d", level)
 	t.metrics.DiskSize.With(labels).Add(float64(bytes))
 }
@@ -346,15 +353,19 @@ func (t *fileTracker) AddBytes(bytes uint64, level int) {
 // SetFileCount sets the number of files in the FileStore.
 func (t *fileTracker) SetFileCount(files map[int]uint64) {
 	labels := t.Labels()
-	level := uint64(0)
+	maxLevel := uint64(0)
 	for k, v := range files {
-		labels["level"] = fmt.Sprintf("%d", k)
-		if uint64(k) > level {
-			level = uint64(k)
+		level := uint64(k)
+		if level > 5 {
+			level = 5
+		}
+		labels["level"] = fmt.Sprintf("%d", level)
+		if level > maxLevel {
+			maxLevel = level
 		}
 		t.metrics.Files.With(labels).Set(float64(v))
 	}
-	atomic.StoreUint64(&t.levels, level)
+	atomic.StoreUint64(&t.levels, maxLevel)
 }
 
 func (t *fileTracker) ClearFileCounts() {
